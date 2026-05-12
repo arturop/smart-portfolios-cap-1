@@ -1,478 +1,96 @@
 <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Calculadora de Métricas de Portafolio - Smart Portfolios Cap. 1</title>
-        <style>
-            :root {
-                --bg-dark: #0f1419;
-                --bg-darker: #0a0e11;
-                --card-bg: #161b22;
-                --text-primary: #f0f6fc;
-                --text-secondary: #8b949e;
-                --accent: #58a6ff;
-                --accent-hover: #79c0ff;
-                --success: #3fb950;
-                --danger: #f85149;
-                --border: #30363d;
-                --radius: 8px;
-                --transition: 0.2s ease;
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora CAGR - Smart Portfolios Cap. 1</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; max-width: 600px; }
+        input, button, textarea { padding: 0.5rem; margin: 0.5rem; width: 100%; box-sizing: border-box; }
+        #result { margin-top: 1rem; padding: 1rem; background: #f0f8ff; border-radius: 4px; }
+        .example { color: #666; font-size: 0.9em; margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+    <h2>📊 Calculadora de CAGR (Capítulo 1 - Smart Portfolios)</h2>
+    <p>Ingresa retornos mensuales (uno por línea, formato decimal: 0.015 = 1.5%):</p>
+    <textarea id="returns" rows="6" placeholder="Ejemplo:
+0.02
+-0.015
+0.03
+0.01
+-0.025
+0.04
+-0.005
+0.02
+0.01
+-0.01">0.02
+-0.015
+0.03
+0.01
+-0.025
+0.04
+-0.005
+0.02
+0.01
+-0.01</textarea>
+    <p class="example">(Puedes reemplazar este ejemplo con tus propios datos)</p>
+    <button id="calcBtn" style="background: #0066cc; color: white; border: none; cursor: pointer;">Calcular CAGR</button>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('calcBtn').addEventListener('click', function() {
+            const textarea = document.getElementById('returns');
+            const text = textarea.value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!text) {
+                resultDiv.textContent = '❌ Error: Por favor ingresa algunos retornos';
+                resultDiv.style.color = 'red';
+                return;
             }
             
-            * { margin: 0; padding: 0; box-sizing: border-box; }
+            // Parsear retornos (soporta decimales y porcentajes opcionalmente)
+            const returns = text.split(/\s+/)
+                .map(s => {
+                    // Si termina en %, convertir de porcentaje a decimal
+                    if (s.endsWith('%')) return parseFloat(s) / 100;
+                    return parseFloat(s);
+                })
+                .filter(s => !isNaN(s));
             
-            body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                background: var(--bg-dark);
-                color: var(--text-primary);
-                line-height: 1.6;
-                padding: 1rem;
+            if (returns.length === 0) {
+                resultDiv.textContent = '❌ Error: No se pudieron leer los retornos válidos';
+                resultDiv.style.color = 'red';
+                return;
             }
             
-            .container {
-                max-width: 900px;
-                margin: 0 auto;
+            // Calcular retorno total compuesto
+            let totalReturn = 1;
+            for (let i = 0; i < returns.length; i++) {
+                totalReturn *= (1 + returns[i]);
             }
+            totalReturn = totalReturn - 1; // Convertir a retorno neto
             
-            h1 {
-                text-align: center;
-                margin-bottom: 2rem;
-                color: var(--accent);
-                font-weight: 600;
-                letter-spacing: -0.5px;
+            // Calcular CAGR (asumiendo que los retornos son mensuales)
+            const months = returns.length;
+            const years = months / 12;
+            const cagr = years > 0 ? Math.pow(1 + totalReturn, 1/years) - 1 : 0;
+            
+            // Mostrar resultado
+            resultDiv.innerHTML = `
+                ✅ <strong>CAGR: ${(cagr * 100).toFixed(2)}% anual</strong><br>
+                <small>Basado en ${months} retornos mensuales (${years.toFixed(1)} años)</small><br>
+                <small>Retorno total del período: ${(totalReturn * 100).toFixed(2)}%</small>
+            `;
+            resultDiv.style.color = '#006600';
+        });
+        
+        // También permitir calcular con Enter en el textarea
+        document.getElementById('returns').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('calcBtn').click();
             }
-            
-            .card {
-                background: var(--card-bg);
-                border-radius: var(--radius);
-                padding: 1.5rem;
-                margin-bottom: 1.5rem;
-                border: 1px solid var(--border);
-            }
-            
-            h2 {
-                color: var(--accent);
-                margin-bottom: 1rem;
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                font-size: 1.25rem;
-            }
-            
-            .tooltip {
-                position: relative;
-                display: inline-block;
-                cursor: help;
-                border-bottom: 1px dotted var(--text-secondary);
-            }
-            
-            .tooltip .tooltiptext {
-                visibility: hidden;
-                width: 300px;
-                background-color: var(--bg-darker);
-                color: var(--text);
-                text-align: left;
-                border-radius: 4px;
-                padding: 0.8rem;
-                position: absolute;
-                z-index: 1;
-                bottom: 125%;
-                left: 50%;
-                margin-left: -150px;
-                opacity: 0;
-                transition: var(--transition);
-                font-size: 0.9rem;
-                line-height: 1.4;
-                border: 1px solid var(--border);
-            }
-            
-            .tooltip:hover .tooltiptext {
-                visibility: visible;
-                opacity: 0.95;
-            }
-            
-            .input-group {
-                margin-bottom: 1.2rem;
-            }
-            
-            .input-group label {
-                display: block;
-                margin-bottom: 0.4rem;
-                font-weight: 500;
-                color: var(--text-secondary);
-            }
-            
-            .input-group input,
-            .input-group select,
-            .input-group textarea {
-                width: 100%;
-                padding: 0.8rem;
-                background: var(--bg-darker);
-                border: 1px solid var(--border);
-                border-radius: var(--radius);
-                color: var(--text-primary);
-                font-size: 1rem;
-                transition: var(--transition);
-            }
-            
-            .input-group input:focus,
-            .input-group select:focus,
-            .input-group textarea:focus {
-                outline: none;
-                border-color: var(--accent);
-                box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2);
-            }
-            
-            .btn {
-                background: var(--accent);
-                color: white;
-                border: none;
-                padding: 0.9rem 1.8rem;
-                border-radius: var(--radius);
-                font-size: 1rem;
-                font-weight: 600;
-                cursor: pointer;
-                transition: var(--transition);
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-            }
-            
-            .btn:hover {
-                background: var(--accent-hover);
-                transform: translateY(-2px);
-            }
-            
-            .btn:active {
-                transform: translateY(0);
-            }
-            
-            .results-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-                gap: 1rem;
-                margin-top: 1.5rem;
-            }
-            
-            .metric-card {
-                background: var(--bg-darker);
-                border-radius: var(--radius);
-                padding: 1.2rem;
-                text-align: center;
-                border: 1px solid var(--border);
-            }
-            
-            .metric-label {
-                font-size: 0.9rem;
-                color: var(--text-secondary);
-                margin-bottom: 0.4rem;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: 0.3rem;
-            }
-            
-            .metric-value {
-                font-size: 1.8rem;
-                font-weight: 700;
-                margin-bottom: 0.2rem;
-                letter-spacing: -0.5px;
-            }
-            
-            .metric-unit {
-                font-size: 0.9rem;
-                color: var(--text-secondary);
-            }
-            
-            .positive { color: var(--success); }
-            .negative { color: var(--danger); }
-            .neutral { color: var(--text-primary); }
-            
-            .example-note {
-                background: var(--bg-darker);
-                border-left: 3px solid var(--accent);
-                padding: 1rem;
-                margin-top: 1.5rem;
-                font-size: 0.9rem;
-                color: var(--text-secondary);
-            }
-            
-            .footer {
-                text-align: center;
-                margin-top: 2.5rem;
-                padding-top: 1.5rem;
-                border-top: 1px solid var(--border);
-                color: var(--text-secondary);
-                font-size: 0.9rem;
-            }
-            
-            .footer a {
-                color: var(--accent);
-                text-decoration: none;
-            }
-            
-            .footer a:hover {
-                text-decoration: underline;
-            }
-            
-            @media (max-width: 600px) {
-                .results-grid {
-                    grid-template-columns: 1fr;
-                }
-                
-                h1 {
-                    font-size: 1.5rem;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>
-                📊 Calculadora de Métricas de Portafolio
-                <span style="font-size: 0.8rem; color: var(--text-secondary);">Capítulo 1 - Smart Portfolios</span>
-            </h1>
-            
-            <div class="card">
-                <h2>📥 Entrada de Datos</h2>
-                
-                <div class="input-group">
-                    <label for="returns">Retornos (uno por línea o separados por comas)</label>
-                    <textarea id="returns" rows="6">0.02
-    -0.015
-    0.03
-    0.01
-    -0.025
-    0.04
-    -0.005
-    0.02
-    0.01
-    -0.01</textarea>
-                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.3rem;">
-                        Use formato decimal (0.015 = 1.5%) o porcentaje (1.5). El detector ajustará automáticamente.
-                    </p>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
-                    <div class="input-group">
-                        <label for="frequency">Frecuencia de los retornos</label>
-                        <select id="frequency">
-                            <option value="daily">Diario</option>
-                            <option value="weekly" selected>Semanal</option>
-                            <option value="monthly">Mensual</option>
-                            <option value="yearly">Anual</option>
-                        </select>
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="rf">Tasa Libre de Riesgo anual (%)</label>
-                        <input type="number" id="rf" value="2" step="0.1" min="0">
-                    </div>
-                </div>
-                
-                <button class="btn" id="calcBtn">
-                    🔢 Calcular Métricas
-                </button>
-            </div>
-            
-            <div class="card">
-                <h2>📈 Resultados</h2>
-                <div id="results" class="results-grid">
-                    <!-- Los resultados se insertarán aquí por JavaScript -->
-                </div>
-            </div>
-            
-            <div class="card">
-                <h2>ℹ️ Acerca de Esta Herramienta</h2>
-                <p>
-                    Esta calculadora implementa las métricas de desempeño descritas en el <strong>Capítulo 1 de "Smart Portfolios" de Robert Carver</strong>. 
-                    Está diseñada para ayudar a inversores y gestores a evaluar objetivamente la calidad de sus estrategias más allá del simple retorno.
-                </p>
-                <p>
-                    <strong>Nota importante:</strong> Esta es una herramienta educativa. Los resultados pasados no garantizan resultados futuros. 
-                    Siempre realice su propia diligencia debida antes de tomar decisiones de inversión.
-                </p>
-            </div>
-            
-            <div class="example-note">
-                <strong>💡 Tip para usuarios de MasDividendos y Adarve:</strong>
-                Pruebe esta herramienta con los retornos históricos de sus estrategias actuales o de las que analice en sus screeners. 
-                Observe cómo métricas como Sortino y Calmar pueden revelar riesgos que el Sharpe tradicional oculta.
-            </div>
-            
-            <div class="footer">
-                Creado por <strong>Arturo Pina López</strong> • 
-                <a href="https://www.masdividendos.com" target="_blank">MasDividendos</a> • 
-                <a href="https://adarve.es" target="_blank">Adarve Gestión de Activos</a> • 
-                Licencia MIT • 
-                <a href="https://github.com/arturo-pina/smart-portfolios-cap-1" target="_blank">Ver en GitHub</a>
-            </div>
-        </div>
-    
-        <script>
-            // Funciones de cálculo de métricas
-            function calculateMetrics() {
-                var returnsInput = document.getElementById('returns').value.trim();
-                if (returnsInput === '') {
-                    alert('Por favor ingrese algunos retornos');
-                    return;
-                }
-                
-                // Parsear retornos
-                var returns = returnsInput
-                    .split(/[\n,]+/)
-                    .map(function(s) { return s.trim(); })
-                    .filter(function(s) { return s.length > 0; })
-                    .map(function(s) {
-                        var val = parseFloat(s);
-                        // Detectar si está en formato porcentaje (>1 asumimos es %)
-                        return Math.abs(val) > 1 ? val / 100 : val;
-                    });
-                
-                if (returns.length === 0) {
-                    alert('No se pudieron parsear los retornos');
-                    return;
-                }
-                
-                var freq = document.getElementById('frequency').value;
-                var freqMap = { daily: 252, weekly: 52, monthly: 12, yearly: 1 };
-                var periodsPerYear = freqMap[freq];
-                
-                var rfAnnual = parseFloat(document.getElementById('rf').value) / 100;
-                var rfPeriod = Math.pow(1 + rfAnnual, 1/periodsPerYear) - 1; // Tasa libre de riesgo por período
-                
-                // Cálculos básicos
-                var totalReturn = returns.reduce(function(acc, r) { return acc * (1 + r); }, 1) - 1;
-                var nYears = returns.length / periodsPerYear;
-                var cagr = nYears > 0 ? Math.pow(1 + totalReturn, 1/nYears) - 1 : 0;
-                
-                // Volatilidad (desviación estándar annualizada)
-                var meanReturn = returns.reduce(function(acc, r) { return acc + r; }, 0) / returns.length;
-                var variance = returns.reduce(function(acc, r) { return acc + Math.pow(r - meanReturn, 2); }, 0) / (returns.length - 1);
-                var volatility = Math.sqrt(variance * periodsPerYear);
-                
-                // Sharpe Ratio
-                var excessReturns = returns.map(function(r) { return r - rfPeriod; });
-                var meanExcess = excessReturns.reduce(function(acc, r) { return acc + r; }, 0) / excessReturns.length;
-                var excessVariance = excessReturns.reduce(function(acc, r) { return acc + Math.pow(r - meanExcess, 2); }, 0) / (excessReturns.length - 1);
-                var sharpe = meanExcess !== 0 && excessVariance !== 0 ? 
-                    (meanExcess * Math.sqrt(periodsPerYear)) / Math.sqrt(excessVariance) : 0;
-                
-                // Sortino Ratio (usando downside deviation)
-                var downsideReturns = returns.map(function(r) { return r < 0 ? r : 0; });
-                var downsideVariance = downsideReturns.reduce(function(acc, r) { return acc + Math.pow(r, 2); }, 0) / returns.length;
-                var downsideDeviation = Math.sqrt(downsideVariance * periodsPerYear);
-                var sortino = downsideDeviation !== 0 ? (cagr - rfAnnual) / downsideDeviation : 0;
-                
-                // Max Drawdown
-                var peak = 1;
-                var maxDrawdown = 0;
-                var currValue = 1;
-                
-                returns.forEach(function(r) {
-                    currValue *= (1 + r);
-                    if (currValue > peak) peak = currValue;
-                    var drawdown = (peak - currValue) / peak;
-                    if (drawdown > maxDrawdown) maxDrawdown = drawdown;
-                });
-                
-                // Calmar Ratio
-                var calmar = maxDrawdown !== 0 ? cagr / maxDrawdown : 0;
-                
-                // Win Rate y demás
-                var winningReturns = returns.filter(function(r) { return r > 0; });
-                var losingReturns = returns.filter(function(r) { return r < 0; });
-                var winRate = winningReturns.length / returns.length;
-                var avgWin = winningReturns.length > 0 ? winningReturns.reduce(function(acc, r) { return acc + r; }, 0) / winningReturns.length : 0;
-                var avgLoss = losingReturns.length > 0 ? Math.abs(losingReturns.reduce(function(acc, r) { return acc + r; }, 0) / losingReturns.length) : 0;
-                var profitFactor = avgLoss !== 0 ? (winRate  avgWin) / ((1 - winRate)  avgLoss) : 0;
-                
-                // Skewness y Kurtosis (fórmula de Fisher)
-                var n = returns.length;
-                var m3 = returns.reduce(function(acc, r) { return acc + Math.pow(r - meanReturn, 3); }, 0) / n;
-                var m4 = returns.reduce(function(acc, r) { return acc + Math.pow(r - meanReturn, 4); }, 0) / n;
-                var skew = Math.sqrt(n  (n-1)) / (n-2)  m3 / Math.pow(variance, 3/2);
-                var kurt = (n-1)  ((n+1)  m4 / (variance  variance) - 3  (n-1)) / ((n-2) * (n-3));
-                
-                // Mostrar resultados usando concatenación de strings (evita template literals)
-                var resultsDiv = document.getElementById('results');
-                var html = '';
-                
-                html += '<div class="metric-card">';
-                html += '<div class="metric-label">CAGR<span class="tooltip" title="Tasa de Crecimiento Anual Compuesta. Mide el retorno anualizado equivalente si los retornos se compusieran cada año.">ℹ️</span></div>';
-                html += '<div class="metric-value ' + (cagr >= 0 ? 'positive' : 'negative') + '">' + (cagr * 100).toFixed(2) + '%</div>';
-                html += '<div class="metric-unit">Anualizado</div>';
-                html += '</div>';
-                
-                html += '<div class="metric-card">';
-                html += '<div class="metric-label">Volatilidad<span class="tooltip" title="Desviación estándar annualizada de los retornos. Mide la variabilidad o riesgo total.">ℹ️</span></div>';
-                html += '<div class="metric-value">' + (volatility * 100).toFixed(2) + '%</div>';
-                html += '<div class="metric-unit">Anualizada</div>';
-                html += '</div>';
-                
-                html += '<div class="metric-card">';
-                html += '<div class="metric-label">Sharpe Ratio<span class="tooltip" title="(Retorno medio - TLF) / Volatilidad. Mide retorno por unidad de riesgo total. >1 es bueno, >2 excelente.">ℹ️</span></div>';
-                html += '<div class="metric-value ' + (sharpe >= 1 ? 'positive' : sharpe >= 0.5 ? 'neutral' : 'negative') + '">' + sharpe.toFixed(2) + '</div>';
-                html += '<div class="metric-unit">RF: ' + (rfAnnual*100).toFixed(1) + '%</div>';
-                html += '</div>';
-                
-                html += '<div class="metric-card">';
-                html += '<div class="metric-label">Sortino Ratio<span class="tooltip" title="(Retorno medio - TLF) / Desviación estándar negativa. Similar a Sharpe pero solo considera volatilidad negativa (riesgo de baja).">ℹ️</span></div>';
-                html += '<div class="metric-value ' + (sortino >= 1 ? 'positive' : sortino >= 0.5 ? 'neutral' : 'negative') + '">' + sortino.toFixed(2) + '</div>';
-                html += '<div class="metric-unit">Solo riesgo de baja</div>';
-                html += '</div>';
-                
-                html += '<div class="metric-card">';
-                html += '<div class="metric-label">Calmar Ratio<span class="tooltip" title="CAGR / Máximo Drawdown. Mide retorno por unidad de peor pérdida histórica. >0.5 es aceptable, >1 bueno.">ℹ️</span></div>';
-                html += '<div class="metric-value ' + (calmar >= 0.5 ? 'positive' : calmar >= 0.2 ? 'neutral' : 'negative') + '">' + calmar.toFixed(2) + '</div>';
-                html += '<div class="metric-unit">Max DD: ' + (maxDrawdown*100).toFixed(1) + '%</div>';
-                html += '</div>';
-                
-                html += '<div class="metric-card">';
-                html += '<div class="metric-label">Máximo Drawdown<span class="tooltip" title="La mayor caída pico a valle desde un máximo histórico. Mide el riesgo de ruin en el peor caso.">ℹ️</span></div>';
-                html += '<div class="metric-value negative">' + (maxDrawdown * 100).toFixed(2) + '%</div>';
-                html += '<div class="metric-unit">De pico a valle</div>';
-                html += '</div>';
-                
-                html += '<div class="metric-card">';
-                html += '<div class="metric-label">Win Rate<span class="tooltip" title="Porcentaje de períodos con retorno positivo. >50% es necesario pero no suficiente para rentabilidad.">ℹ️</span></div>';
-                html += '<div class="metric-value">' + (winRate * 100).toFixed(1) + '%</div>';
-                html += '<div class="metric-unit">Períodos ganadores</div>';
-                html += '</div>';
-                
-                html += '<div class="metric-card">';
-                html += '<div class="metric-label">Avg Win / Avg Loss<span class="tooltip" title="Ratio del tamaño medio de ganancias vs pérdidas. Necesario para entender si el edge viene de frecuencia o magnitud.">ℹ️</span></div>';
-                html += '<div class="metric-value">' + (avgWin !== 0 && avgLoss !== 0 ? (avgWin/avgLoss).toFixed(2) : 'N/A') + '</div>';
-                html += '<div class="metric-unit">Ganancia : Pérdida</div>';
-                html += '</div>';
-                
-                html += '<div class="metric-card">';
-                html += '<div class="metric-label">Profit Factor<span class="tooltip" title="Beneficio bruto / Pérdida bruta. >1 indica sistema rentable. >1.5 bueno, >2 excelente.">ℹ️</span></div>';
-                html += '<div class="metric-value ' + (profitFactor > 1.5 ? 'positive' : profitFactor > 1 ? 'neutral' : 'negative') + '">' + profitFactor.toFixed(2) + '</div>';
-                html += '<div class="metric-unit">Beneficio : Pérdida</div>';
-                html += '</div>';
-                
-                html += '<div class="metric-card">';
-                html += '<div class="metric-label">Skewness<span class="tooltip" title="Asimetría de la distribución de retornos. Positivo = más ganancias grandes extremes, Negativo = más pérdidas grandes extremes.">ℹ️</span></div>';
-                html += '<div class="metric-value">' + skew.toFixed(3) + '</div>';
-                html += '<div class="metric-unit">Simetría</div>';
-                html += '</div>';
-                
-                html += '<div class="metric-card">';
-                html += '<div class="metric-label">Kurtosis<span class="tooltip" title="Cola de la distribución. Positivo = más eventos extremos que una normal (colas pesadas).">ℹ️</span></div>';
-                html += '<div class="metric-value">' + kurt.toFixed(3) + '</div>';
-                html += '<div class="metric-unit">Forma de cola</div>';
-                html += '</div>';
-                
-                resultsDiv.innerHTML = html;
-            }
-            
-            // Event Listener
-            document.getElementById('calcBtn').addEventListener('click', calculateMetrics);
-            
-            // Calcular al cargar con datos de ejemplo
-            window.addEventListener('load', calculateMetrics);
-        </script>
-    </body>
-    </html>
+        });
+    </script>
+</body>
+</html>
