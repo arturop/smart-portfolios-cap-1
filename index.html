@@ -314,19 +314,18 @@
                 return;
             }
             
-            // Convertir tasa libre de riesgo anual a mensual para cálculos
-            const riskFreeAnnual = riskFreeInput / 100; // a decimal
-            const riskFreeMonthly = Math.pow(1 + riskFreeAnnual, 1/12) - 1;
+            // Convertir tasa libre de riesgo anual a decimal para cálculos
+            const riskFreeAnnual = riskFreeInput / 100; // a decimal (ej: 2% -> 0.02)
             
             // Calcular métricas
-            const metrics = calculateAllMetrics(returns, riskFreeMonthly);
+            const metrics = calculateAllMetrics(returns, riskFreeAnnual);
             
             // Mostrar resultados
             displayMetrics(metrics, metricsGrid);
             resultsSection.style.display = 'block';
         }
         
-        function calculateAllMetrics(returns, riskFreeMonthly) {
+        function calculateAllMetrics(returns, riskFreeAnnual) {
             const n = returns.length;
             
             // 1. Retorno total y CAGR
@@ -345,10 +344,12 @@
             const volatility = Math.sqrt(variance) * Math.sqrt(12); // anualizada
             
             // 3. Ratio de Sharpe
-            const excessReturn = cagr - riskFreeInput/100; // ambos anuales
+            const excessReturn = cagr - riskFreeAnnual; // ambos anuales
             const sharpe = volatility !== 0 ? excessReturn / volatility : 0;
             
             // 4. Ratio de Sortino (solo desviación negativa)
+            // Necesitamos la tasa libre de riesgo mensual para esto
+            const riskFreeMonthly = Math.pow(1 + riskFreeAnnual, 1/12) - 1;
             const downsideReturns = returns.map(r => Math.min(0, r - riskFreeMonthly));
             const downsideVariance = downsideReturns.reduce((sum, d) => sum + Math.pow(d, 2), 0) / n;
             const downsideDeviation = Math.sqrt(downsideVariance) * Math.sqrt(12);
