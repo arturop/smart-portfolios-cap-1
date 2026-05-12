@@ -2,18 +2,219 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Calculadora CAGR - Smart Portfolios Cap. 1</title>
+    <title>Calculadora de Métricas de Portafolio - Smart Portfolios Cap. 1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: Arial, sans-serif; margin: 2rem; max-width: 600px; }
-        input, button, textarea { padding: 0.5rem; margin: 0.5rem; width: 100%; box-sizing: border-box; }
-        #result { margin-top: 1rem; padding: 1rem; background: #f0f8ff; border-radius: 4px; }
-        .example { color: #666; font-size: 0.9em; margin-top: 0.5rem; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            padding: 1rem;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+        .main-content {
+            padding: 2rem;
+        }
+        .input-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .input-section h2 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .input-section h2::before {
+            content: "📊";
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #495057;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+        .form-group input[type="number"] {
+            width: 150px;
+        }
+        .help-text {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+        .calculate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+        .results-section {
+            margin-top: 2rem;
+        }
+        .results-section h2 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .results-section h2::before {
+            content: "📈";
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        .metric-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .metric-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+        }
+        .metric-card.positive {
+            border-left-color: #28a745;
+        }
+        .metric-card.negative {
+            border-left-color: #dc3545;
+        }
+        .metric-card.neutral {
+            border-left-color: #6c757d;
+        }
+        .metric-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            line-height: 1.2;
+        }
+        .metric-value.small {
+            font-size: 1.2rem;
+        }
+        .metric-value.percent::after {
+            content: "%";
+        }
+        .metric-value.ratio {
+            font-size: 1.3rem;
+        }
+        .metric-explanation {
+            font-size: 0.8rem;
+            color: #868e96;
+            margin-top: 0.75rem;
+            font-style: italic;
+            line-height: 1.4;
+        }
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+            margin-top: 2rem;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            header h1 {
+                font-size: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <h2>📊 Calculadora de CAGR (Capítulo 1 - Smart Portfolios)</h2>
-    <p>Ingresa retornos mensuales (uno por línea, formato decimal: 0.015 = 1.5%):</p>
-    <textarea id="returns" rows="6" placeholder="Ejemplo:
+    <div class="container">
+        <header>
+            <h1>Calculadora de Métricas de Portafolio</h1>
+            <p>Capítulo 1: Smart Portfolios - Análisis de rendimiento y riesgo</p>
+        </header>
+        <div class="main-content">
+            <div class="input-section">
+                <h2>Datos de entrada</h2>
+                <div class="form-group">
+                    <label for="returns">Retornos mensuales (uno por línea)</label>
+                    <textarea id="returns" placeholder="Ejemplo:
 0.02
 -0.015
 0.03
@@ -33,64 +234,235 @@
 0.02
 0.01
 -0.01</textarea>
-    <p class="example">(Puedes reemplazar este ejemplo con tus propios datos)</p>
-    <button id="calcBtn" style="background: #0066cc; color: white; border: none; cursor: pointer;">Calcular CAGR</button>
-    <div id="result"></div>
+                    <p class="help-text">Ingresa los retornos en formato decimal (0.015 = 1.5%) o porcentaje (1.5%). Un retorno por línea.</p>
+                </div>
+                <div class="form-group">
+                    <label for="riskFree">Tasa libre de riesgo anual (%)</label>
+                    <input type="number" id="riskFree" value="2" step="0.1" min="0">
+                    <p class="help-text">Tasa libre de riesgo anual para calcular Sharpe y Sortino (ej: 2 para 2%)</p>
+                </div>
+                <button class="calculate-btn" id="calculateBtn">
+                    <span>📊</span> Calcular todas las métricas
+                </button>
+            </div>
+            
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <h2>Resultados del análisis</h2>
+                <div class="metrics-grid" id="metricsGrid">
+                    <!-- Las métricas se insertarán aquí mediante JavaScript -->
+                </div>
+            </div>
+            
+            <div id="errorMessage" style="display: none; padding: 1.5rem; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; margin-bottom: 2rem; color: #856404;">
+                <strong>Error:</strong> <span id="errorText"></span>
+            </div>
+        </div>
+        <div class="footer">
+            <p>Herramienta educativa basada en <em>Smart Portfolios</em> de Robert Carver. <br>
+            Creado por <a href="https://masdividendos.com" target="_blank">MasDividendos.com</a> | Licencia MIT</p>
+        </div>
+    </div>
 
     <script>
-        document.getElementById('calcBtn').addEventListener('click', function() {
-            const textarea = document.getElementById('returns');
-            const text = textarea.value.trim();
-            const resultDiv = document.getElementById('result');
+        document.getElementById('calculateBtn').addEventListener('click', calculateMetrics);
+        
+        // Permitir calcular con Enter en el textarea
+        document.getElementById('returns').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculateMetrics();
+            }
+        });
+        
+        function calculateMetrics() {
+            const returnsInput = document.getElementById('returns').value.trim();
+            const riskFreeInput = parseFloat(document.getElementById('riskFree').value);
+            const resultsSection = document.getElementById('resultsSection');
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            const metricsGrid = document.getElementById('metricsGrid');
             
-            if (!text) {
-                resultDiv.textContent = '❌ Error: Por favor ingresa algunos retornos';
-                resultDiv.style.color = 'red';
+            // Reset UI
+            errorMessage.style.display = 'none';
+            resultsSection.style.display = 'none';
+            metricsGrid.innerHTML = '';
+            
+            // Validar entrada
+            if (!returnsInput) {
+                errorText.textContent = 'Por favor ingresa algunos retornos';
+                errorMessage.style.display = 'block';
                 return;
             }
             
-            // Parsear retornos (soporta decimales y porcentajes opcionalmente)
-            const returns = text.split(/\s+/)
+            // Parsear retornos (soporta decimales y porcentajes)
+            const returns = returnsInput.split(/\s+/)
                 .map(s => {
-                    // Si termina en %, convertir de porcentaje a decimal
-                    if (s.endsWith('%')) return parseFloat(s) / 100;
-                    return parseFloat(s);
+                    // Elimina cualquier carácter no numérico excepto punto, coma y signo
+                    const cleaned = s.replace(/[^\d.-]/g, '');
+                    // Si estaba en porcentaje, convertir a decimal
+                    if (s.endsWith('%') || s.endsWith(' %') || s.endsWith(' %')) {
+                        return parseFloat(cleaned) / 100;
+                    }
+                    return parseFloat(cleaned);
                 })
                 .filter(s => !isNaN(s));
             
             if (returns.length === 0) {
-                resultDiv.textContent = '❌ Error: No se pudieron leer los retornos válidos';
-                resultDiv.style.color = 'red';
+                errorText.textContent = 'No se pudieron leer retornos válidos. Verifica el formato.';
+                errorMessage.style.display = 'block';
                 return;
             }
             
-            // Calcular retorno total compuesto
+            if (isNaN(riskFreeInput) || riskFreeInput < 0) {
+                errorText.textContent = 'Por favor ingresa una tasa libre de riesgo válida';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            // Convertir tasa libre de riesgo anual a mensual para cálculos
+            const riskFreeAnnual = riskFreeInput / 100; // a decimal
+            const riskFreeMonthly = Math.pow(1 + riskFreeAnnual, 1/12) - 1;
+            
+            // Calcular métricas
+            const metrics = calculateAllMetrics(returns, riskFreeMonthly);
+            
+            // Mostrar resultados
+            displayMetrics(metrics, metricsGrid);
+            resultsSection.style.display = 'block';
+        }
+        
+        function calculateAllMetrics(returns, riskFreeMonthly) {
+            const n = returns.length;
+            
+            // 1. Retorno total y CAGR
             let totalReturn = 1;
-            for (let i = 0; i < returns.length; i++) {
+            for (let i = 0; i < n; i++) {
                 totalReturn *= (1 + returns[i]);
             }
-            totalReturn = totalReturn - 1; // Convertir a retorno neto
+            totalReturn = totalReturn - 1; // retorno neto del período
             
-            // Calcular CAGR (asumiendo que los retornos son mensuales)
-            const months = returns.length;
-            const years = months / 12;
+            const years = n / 12;
             const cagr = years > 0 ? Math.pow(1 + totalReturn, 1/years) - 1 : 0;
             
-            // Mostrar resultado
-            resultDiv.innerHTML = `
-                ✅ <strong>CAGR: ${(cagr * 100).toFixed(2)}% anual</strong><br>
-                <small>Basado en ${months} retornos mensuales (${years.toFixed(1)} años)</small><br>
-                <small>Retorno total del período: ${(totalReturn * 100).toFixed(2)}%</small>
-            `;
-            resultDiv.style.color = '#006600';
-        });
-        
-        // También permitir calcular con Enter en el textarea
-        document.getElementById('returns').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('calcBtn').click();
+            // 2. Volatilidad (desviación estándar anualizada)
+            const mean = returns.reduce((sum, r) => sum + r, 0) / n;
+            const variance = returns.reduce((sum, r) => sum + Math.pow(r - mean, 2), 0) / n;
+            const volatility = Math.sqrt(variance) * Math.sqrt(12); // anualizada
+            
+            // 3. Ratio de Sharpe
+            const excessReturn = cagr - riskFreeInput/100; // ambos anuales
+            const sharpe = volatility !== 0 ? excessReturn / volatility : 0;
+            
+            // 4. Ratio de Sortino (solo desviación negativa)
+            const downsideReturns = returns.map(r => Math.min(0, r - riskFreeMonthly));
+            const downsideVariance = downsideReturns.reduce((sum, d) => sum + Math.pow(d, 2), 0) / n;
+            const downsideDeviation = Math.sqrt(downsideVariance) * Math.sqrt(12);
+            const sortino = downsideDeviation !== 0 ? excessReturn / downsideDeviation : 0;
+            
+            // 5. Máximo drawdown y ratio de Calmar
+            let peak = 1;
+            let maxDrawdown = 0;
+            let current = 1;
+            
+            for (let i = 0; i < n; i++) {
+                current *= (1 + returns[i]);
+                if (current > peak) {
+                    peak = current;
+                }
+                const drawdown = (peak - current) / peak;
+                if (drawdown > maxDrawdown) {
+                    maxDrawdown = drawdown;
+                }
             }
-        });
+            
+            const calmar = maxDrawdown !== 0 ? cagr / maxDrawdown : 0;
+            
+            // 6. Tasa de aciertos, promedio de ganancias/pérdidas
+            const winningReturns = returns.filter(r => r > 0);
+            const losingReturns = returns.filter(r => r < 0);
+            
+            const winRate = winningReturns.length / n;
+            const avgWin = winningReturns.length > 0 ? winningReturns.reduce((sum, r) => sum + r, 0) / winningReturns.length : 0;
+            const avgLoss = losingReturns.length > 0 ? Math.abs(losingReturns.reduce((sum, r) => sum + r, 0) / losingReturns.length) : 0;
+            const profitFactor = avgLoss !== 0 ? (winningReturns.reduce((sum, r) => sum + r, 0) / Math.abs(losingReturns.reduce((sum, r) => sum + r, 0))) : 0;
+            
+            // 7. Asimetría y curtosis (excesos)
+            const m3 = returns.reduce((sum, r) => sum + Math.pow(r - mean, 3), 0) / n;
+            const m4 = returns.reduce((sum, r) => sum + Math.pow(r - mean, 4), 0) / n;
+            const skewness = Math.pow(variance, 3/2) !== 0 ? m3 / Math.pow(variance, 3/2) : 0;
+            const kurtosis = variance !== 0 ? (m4 / Math.pow(variance, 2)) - 3 : 0; // exceso de curtosis
+            
+            return {
+                cagr: cagr * 100, // a porcentaje
+                volatility: volatility * 100, // a porcentaje
+                sharpe: sharpe,
+                sortino: sortino,
+                calmar: calmar,
+                maxDrawdown: maxDrawdown * 100, // a porcentaje
+                winRate: winRate * 100, // a porcentaje
+                avgWin: avgWin * 100, // a porcentaje
+                avgLoss: avgLoss * 100, // a porcentaje
+                profitFactor: profitFactor,
+                skewness: skewness,
+                kurtosis: kurtosis
+            };
+        }
+        
+        function displayMetrics(metrics, container) {
+            const metricsToDisplay = [
+                { label: 'CAGR anual', value: metrics.cagr, format: 'percent', positive: true, explanation: 'Tasa de crecimiento anual compuesta' },
+                { label: 'Volatilidad anual', value: metrics.volatility, format: 'percent', positive: false, explanation: 'Desviación estándar de los retornos anualizada' },
+                { label: 'Ratio de Sharpe', value: metrics.sharpe, format: 'ratio', positive: metrics.sharpe > 0, explanation: 'Retorno exceso por unidad de volatilidad (mayor es mejor)' },
+                { label: 'Ratio de Sortino', value: metrics.sortino, format: 'ratio', positive: metrics.sortino > 0, explanation: 'Similar a Sharpe pero solo considera volatilidad a la baja' },
+                { label: 'Ratio de Calmar', value: metrics.calmar, format: 'ratio', positive: metrics.calmar > 0, explanation: 'CAGR dividido por máximo drawdown (mayor es mejor)' },
+                { label: 'Máximo drawdown', value: metrics.maxDrawdown, format: 'percent', positive: false, explanation: 'Pico a valle máximo en el período' },
+                { label: 'Tasa de aciertos', value: metrics.winRate, format: 'percent', positive: true, explanation: 'Porcentaje de meses con retornos positivos' },
+                { label: 'Promedio de ganancia', value: metrics.avgWin, format: 'percent', positive: true, explanation: 'Retorno promedio en meses ganadores' },
+                { label: 'Promedio de pérdida', value: metrics.avgLoss, format: 'percent', positive: false, explanation: 'Retorno promedio (absoluto) en meses perdedores' },
+                { label: 'Factor de beneficio', value: metrics.profitFactor, format: 'ratio', positive: metrics.profitFactor > 1, explanation: 'Ratio entre ganancias totales y pérdidas totales' },
+                { label: 'Asimetría', value: metrics.skewness, format: 'number', positive: metrics.skewness > 0, explanation: 'Medida de simetría de la distribución de retornos' },
+                { label: 'Curtosis (exceso)', value: metrics.kurtosis, format: 'number', positive: metrics.kurtosis > 0, explanation: 'Medida de "colas pesadas" respecto a distribución normal' }
+            ];
+            
+            metricsToDisplay.forEach(metric => {
+                const card = document.createElement('div');
+                card.className = `metric-card ${metric.positive ? 'positive' : !metric.positive && metric.label.includes('pérdida') ? 'negative' : 'neutral'}`;
+                
+                const label = document.createElement('div');
+                label.className = 'metric-label';
+                label.textContent = metric.label;
+                
+                const value = document.createElement('div');
+                value.className = 'metric-value';
+                
+                // Formatear valor según tipo
+                let formattedValue;
+                switch (metric.format) {
+                    case 'percent':
+                        formattedValue = metric.value.toFixed(2);
+                        break;
+                    case 'ratio':
+                        formattedValue = metric.value.toFixed(3);
+                        break;
+                    case 'number':
+                        formattedValue = metric.value.toFixed(3);
+                        break;
+                    default:
+                        formattedValue = metric.value.toFixed(2);
+                }
+                
+                value.textContent = formattedValue;
+                
+                const explanation = document.createElement('div');
+                explanation.className = 'metric-explanation';
+                explanation.textContent = metric.explanation;
+                
+                card.appendChild(label);
+                card.appendChild(value);
+                card.appendChild(explanation);
+                
+                container.appendChild(card);
+            });
+        }
     </script>
 </body>
 </html>
