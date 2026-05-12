@@ -239,7 +239,7 @@
                 
                 <div class="input-group">
                     <label for="returns">Retornos (uno por línea o separados por comas)</label>
-                    <textarea id="returns" rows="6" placeholder="Ejemplo para probar:\n0.02\n-0.015\n0.03\n0.01\n-0.025\n0.04\n-0.005\n0.02\n0.01\n-0.01">0.02
+                    <textarea id="returns" rows="6">0.02
     -0.015
     0.03
     0.01
@@ -312,20 +312,20 @@
     
         <script>
             // Funciones de cálculo de métricas
-            const calculateMetrics = () => {
-                const returnsInput = document.getElementById('returns').value.trim();
-                if (!returnsInput) {
+            function calculateMetrics() {
+                var returnsInput = document.getElementById('returns').value.trim();
+                if (returnsInput === '') {
                     alert('Por favor ingrese algunos retornos');
                     return;
                 }
                 
                 // Parsear retornos
-                let returns = returnsInput
+                var returns = returnsInput
                     .split(/[\n,]+/)
-                    .map(s => s.trim())
-                    .filter(s => s.length > 0)
-                    .map(s => {
-                        let val = parseFloat(s);
+                    .map(function(s) { return s.trim(); })
+                    .filter(function(s) { return s.length > 0; })
+                    .map(function(s) {
+                        var val = parseFloat(s);
                         // Detectar si está en formato porcentaje (>1 asumimos es %)
                         return Math.abs(val) > 1 ? val / 100 : val;
                     });
@@ -335,138 +335,138 @@
                     return;
                 }
                 
-                const freq = document.getElementById('frequency').value;
-                const freqMap = { daily: 252, weekly: 52, monthly: 12, yearly: 1 };
-                const periodsPerYear = freqMap[freq];
+                var freq = document.getElementById('frequency').value;
+                var freqMap = { daily: 252, weekly: 52, monthly: 12, yearly: 1 };
+                var periodsPerYear = freqMap[freq];
                 
-                const rfAnnual = parseFloat(document.getElementById('rf').value) / 100;
-                const rfPeriod = Math.pow(1 + rfAnnual, 1/periodsPerYear) - 1; // Tasa libre de riesgo por período
+                var rfAnnual = parseFloat(document.getElementById('rf').value) / 100;
+                var rfPeriod = Math.pow(1 + rfAnnual, 1/periodsPerYear) - 1; // Tasa libre de riesgo por período
                 
                 // Cálculos básicos
-                const totalReturn = returns.reduce((acc, r) => acc * (1 + r), 1) - 1;
-                const nYears = returns.length / periodsPerYear;
-                const cagr = nYears > 0 ? Math.pow(1 + totalReturn, 1/nYears) - 1 : 0;
+                var totalReturn = returns.reduce(function(acc, r) { return acc * (1 + r); }, 1) - 1;
+                var nYears = returns.length / periodsPerYear;
+                var cagr = nYears > 0 ? Math.pow(1 + totalReturn, 1/nYears) - 1 : 0;
                 
                 // Volatilidad (desviación estándar annualizada)
-                const meanReturn = returns.reduce((acc, r) => acc + r, 0) / returns.length;
-                const variance = returns.reduce((acc, r) => acc + Math.pow(r - meanReturn, 2), 0) / (returns.length - 1);
-                const volatility = Math.sqrt(variance * periodsPerYear);
+                var meanReturn = returns.reduce(function(acc, r) { return acc + r; }, 0) / returns.length;
+                var variance = returns.reduce(function(acc, r) { return acc + Math.pow(r - meanReturn, 2); }, 0) / (returns.length - 1);
+                var volatility = Math.sqrt(variance * periodsPerYear);
                 
                 // Sharpe Ratio
-                const excessReturns = returns.map(r => r - rfPeriod);
-                const meanExcess = excessReturns.reduce((acc, r) => acc + r, 0) / excessReturns.length;
-                const excessVariance = excessReturns.reduce((acc, r) => acc + Math.pow(r - meanExcess, 2), 0) / (excessReturns.length - 1);
-                const sharpe = meanExcess !== 0 && excessVariance !== 0 ? 
+                var excessReturns = returns.map(function(r) { return r - rfPeriod; });
+                var meanExcess = excessReturns.reduce(function(acc, r) { return acc + r; }, 0) / excessReturns.length;
+                var excessVariance = excessReturns.reduce(function(acc, r) { return acc + Math.pow(r - meanExcess, 2); }, 0) / (excessReturns.length - 1);
+                var sharpe = meanExcess !== 0 && excessVariance !== 0 ? 
                     (meanExcess * Math.sqrt(periodsPerYear)) / Math.sqrt(excessVariance) : 0;
                 
                 // Sortino Ratio (usando downside deviation)
-                const downsideReturns = returns.map(r => r < 0 ? r : 0);
-                const downsideVariance = downsideReturns.reduce((acc, r) => acc + Math.pow(r, 2), 0) / returns.length;
-                const downsideDeviation = Math.sqrt(downsideVariance * periodsPerYear);
-                const sortino = downsideDeviation !== 0 ? (cagr - rfAnnual) / downsideDeviation : 0;
+                var downsideReturns = returns.map(function(r) { return r < 0 ? r : 0; });
+                var downsideVariance = downsideReturns.reduce(function(acc, r) { return acc + Math.pow(r, 2); }, 0) / returns.length;
+                var downsideDeviation = Math.sqrt(downsideVariance * periodsPerYear);
+                var sortino = downsideDeviation !== 0 ? (cagr - rfAnnual) / downsideDeviation : 0;
                 
                 // Max Drawdown
-                let peak = 1;
-                let maxDrawdown = 0;
-                let currValue = 1;
-                const curve = [1];
+                var peak = 1;
+                var maxDrawdown = 0;
+                var currValue = 1;
                 
-                returns.forEach(r => {
+                returns.forEach(function(r) {
                     currValue *= (1 + r);
                     if (currValue > peak) peak = currValue;
-                    const drawdown = (peak - currValue) / peak;
+                    var drawdown = (peak - currValue) / peak;
                     if (drawdown > maxDrawdown) maxDrawdown = drawdown;
-                    curve.push(currValue);
                 });
                 
                 // Calmar Ratio
-                const calmar = maxDrawdown !== 0 ? cagr / maxDrawdown : 0;
+                var calmar = maxDrawdown !== 0 ? cagr / maxDrawdown : 0;
                 
                 // Win Rate y demás
-                const winningReturns = returns.filter(r => r > 0);
-                const losingReturns = returns.filter(r => r < 0);
-                const winRate = winningReturns.length / returns.length;
-                const avgWin = winningReturns.length > 0 ? winningReturns.reduce((acc, r) => acc + r, 0) / winningReturns.length : 0;
-                const avgLoss = losingReturns.length > 0 ? Math.abs(losingReturns.reduce((acc, r) => acc + r, 0) / losingReturns.length) : 0;
-                const profitFactor = avgLoss !== 0 ? (winRate  avgWin) / ((1 - winRate)  avgLoss) : 0;
+                var winningReturns = returns.filter(function(r) { return r > 0; });
+                var losingReturns = returns.filter(function(r) { return r < 0; });
+                var winRate = winningReturns.length / returns.length;
+                var avgWin = winningReturns.length > 0 ? winningReturns.reduce(function(acc, r) { return acc + r; }, 0) / winningReturns.length : 0;
+                var avgLoss = losingReturns.length > 0 ? Math.abs(losingReturns.reduce(function(acc, r) { return acc + r; }, 0) / losingReturns.length) : 0;
+                var profitFactor = avgLoss !== 0 ? (winRate  avgWin) / ((1 - winRate)  avgLoss) : 0;
                 
                 // Skewness y Kurtosis (fórmula de Fisher)
-                const n = returns.length;
-                const m3 = returns.reduce((acc, r) => acc + Math.pow(r - meanReturn, 3), 0) / n;
-                const m4 = returns.reduce((acc, r) => acc + Math.pow(r - meanReturn, 4), 0) / n;
-                const skew = Math.sqrt(n  (n-1)) / (n-2)  m3 / Math.pow(variance, 3/2);
-                const kurt = (n-1)  ((n+1)  m4 / (variance  variance) - 3  (n-1)) / ((n-2) * (n-3));
+                var n = returns.length;
+                var m3 = returns.reduce(function(acc, r) { return acc + Math.pow(r - meanReturn, 3); }, 0) / n;
+                var m4 = returns.reduce(function(acc, r) { return acc + Math.pow(r - meanReturn, 4); }, 0) / n;
+                var skew = Math.sqrt(n  (n-1)) / (n-2)  m3 / Math.pow(variance, 3/2);
+                var kurt = (n-1)  ((n+1)  m4 / (variance  variance) - 3  (n-1)) / ((n-2) * (n-3));
                 
-                // Mostrar resultados
-                const resultsDiv = document.getElementById('results');
-                resultsDiv.innerHTML = `
-                    <div class="metric-card">
-                        <div class="metric-label">CAGR<span class="tooltip" title="Tasa de Crecimiento Anual Compuesta. Mide el retorno anualizado equivalente si los retornos se compusieran cada año.">ℹ️</span></div>
-                        <div class="metric-value ${cagr >= 0 ? 'positive' : 'negative'}">${(cagr * 100).toFixed(2)}%</div>
-                        <div class="metric-unit">Anualizado</div>
-                    </div>
-                    
-                    <div class="metric-card">
-                        <div class="metric-label">Volatilidad<span class="tooltip" title="Desviación estándar annualizada de los retornos. Mide la variabilidad o riesgo total.">ℹ️</span></div>
-                        <div class="metric-value">${(volatility * 100).toFixed(2)}%</div>
-                        <div class="metric-unit">Anualizada</div>
-                    </div>
-                    
-                    <div class="metric-card">
-                        <div class="metric-label">Sharpe Ratio<span class="tooltip" title="(Retorno medio - TLF) / Volatilidad. Mide retorno por unidad de riesgo total. >1 es bueno, >2 excelente.">ℹ️</span></div>
-                        <div class="metric-value ${sharpe >= 1 ? 'positive' : sharpe >= 0.5 ? 'neutral' : 'negative'}">${sharpe.toFixed(2)}</div>
-                        <div class="metric-unit">RF: ${(rfAnnual*100).toFixed(1)}%</div>
-                    </div>
-                    
-                    <div class="metric-card">
-                        <div class="metric-label">Sortino Ratio<span class="tooltip" title="(Retorno medio - TLF) / Desviación estándar negativa. Similar a Sharpe pero solo considera volatilidad negativa (riesgo de baja).">ℹ️</span></div>
-                        <div class="metric-value ${sortino >= 1 ? 'positive' : sortino >= 0.5 ? 'neutral' : 'negative'}">${sortino.toFixed(2)}</div>
-                        <div class="metric-unit">Solo riesgo de baja</div>
-                    </div>
-                    
-                    <div class="metric-card">
-                        <div class="metric-label">Calmar Ratio<span class="tooltip" title="CAGR / Máximo Drawdown. Mide retorno por unidad de peor pérdida histórica. >0.5 es aceptable, >1 bueno.">ℹ️</span></div>
-                        <div class="metric-value ${calmar >= 0.5 ? 'positive' : calmar >= 0.2 ? 'neutral' : 'negative'}">${calmar.toFixed(2)}</div>
-                        <div class="metric-unit">Max DD: ${(maxDrawdown*100).toFixed(1)}%</div>
-                    </div>
-                    
-                    <div class="metric-card">
-                        <div class="metric-label">Máximo Drawdown<span class="tooltip" title="La mayor caída pico a valle desde un máximo histórico. Mide el riesgo de ruin en el peor caso.">ℹ️</span></div>
-                        <div class="metric-value negative">${(maxDrawdown * 100).toFixed(2)}%</div>
-                        <div class="metric-unit">De pico a valle</div>
-                    </div>
-                    
-                    <div class="metric-card">
-                        <div class="metric-label">Win Rate<span class="tooltip" title="Porcentaje de períodos con retorno positivo. >50% es necesario pero no suficiente para rentabilidad.">ℹ️</span></div>
-                        <div class="metric-value">${(winRate * 100).toFixed(1)}%</div>
-                        <div class="metric-unit">Períodos ganadores</div>
-                    </div>
-                    
-                    <div class="metric-card">
-                        <div class="metric-label">Avg Win / Avg Loss<span class="tooltip" title="Ratio del tamaño medio de ganancias vs pérdidas. Necesario para entender si el edge viene de frecuencia o magnitud.">ℹ️</span></div>
-                        <div class="metric-value">${avgWin !== 0 && avgLoss !== 0 ? (avgWin/avgLoss).toFixed(2) : 'N/A'}</div>
-                        <div class="metric-unit">Ganancia : Pérdida</div>
-                    </div>
-                    
-                    <div class="metric-card">
-                        <div class="metric-label">Profit Factor<span class="tooltip" title="Beneficio bruto / Pérdida bruta. >1 indica sistema rentable. >1.5 bueno, >2 excelente.">ℹ️</span></div>
-                        <div class="metric-value ${profitFactor > 1.5 ? 'positive' : profitFactor > 1 ? 'neutral' : 'negative'}">${profitFactor.toFixed(2)}</div>
-                        <div class="metric-unit">Beneficio : Pérdida</div>
-                    </div>
-                    
-                    <div class="metric-card">
-                        <div class="metric-label">Skewness<span class="tooltip" title="Asimetría de la distribución de retornos. Positivo = más ganancias grandes extremes, Negativo = más pérdidas grandes extremes.">ℹ️</span></div>
-                        <div class="metric-value">${skew.toFixed(3)}</div>
-                        <div class="metric-unit">Simetría</div>
-                    </div>
-                    
-                    <div class="metric-card">
-                        <div class="metric-label">Kurtosis<span class="tooltip" title="Cola de la distribución. Positivo = más eventos extremos que una normal (colas pesadas).">ℹ️</span></div>
-                        <div class="metric-value">${kurt.toFixed(3)}</div>
-                        <div class="metric-unit">Forma de cola</div>
-                    </div>
-                `;
-            };
+                // Mostrar resultados usando concatenación de strings (evita template literals)
+                var resultsDiv = document.getElementById('results');
+                var html = '';
+                
+                html += '<div class="metric-card">';
+                html += '<div class="metric-label">CAGR<span class="tooltip" title="Tasa de Crecimiento Anual Compuesta. Mide el retorno anualizado equivalente si los retornos se compusieran cada año.">ℹ️</span></div>';
+                html += '<div class="metric-value ' + (cagr >= 0 ? 'positive' : 'negative') + '">' + (cagr * 100).toFixed(2) + '%</div>';
+                html += '<div class="metric-unit">Anualizado</div>';
+                html += '</div>';
+                
+                html += '<div class="metric-card">';
+                html += '<div class="metric-label">Volatilidad<span class="tooltip" title="Desviación estándar annualizada de los retornos. Mide la variabilidad o riesgo total.">ℹ️</span></div>';
+                html += '<div class="metric-value">' + (volatility * 100).toFixed(2) + '%</div>';
+                html += '<div class="metric-unit">Anualizada</div>';
+                html += '</div>';
+                
+                html += '<div class="metric-card">';
+                html += '<div class="metric-label">Sharpe Ratio<span class="tooltip" title="(Retorno medio - TLF) / Volatilidad. Mide retorno por unidad de riesgo total. >1 es bueno, >2 excelente.">ℹ️</span></div>';
+                html += '<div class="metric-value ' + (sharpe >= 1 ? 'positive' : sharpe >= 0.5 ? 'neutral' : 'negative') + '">' + sharpe.toFixed(2) + '</div>';
+                html += '<div class="metric-unit">RF: ' + (rfAnnual*100).toFixed(1) + '%</div>';
+                html += '</div>';
+                
+                html += '<div class="metric-card">';
+                html += '<div class="metric-label">Sortino Ratio<span class="tooltip" title="(Retorno medio - TLF) / Desviación estándar negativa. Similar a Sharpe pero solo considera volatilidad negativa (riesgo de baja).">ℹ️</span></div>';
+                html += '<div class="metric-value ' + (sortino >= 1 ? 'positive' : sortino >= 0.5 ? 'neutral' : 'negative') + '">' + sortino.toFixed(2) + '</div>';
+                html += '<div class="metric-unit">Solo riesgo de baja</div>';
+                html += '</div>';
+                
+                html += '<div class="metric-card">';
+                html += '<div class="metric-label">Calmar Ratio<span class="tooltip" title="CAGR / Máximo Drawdown. Mide retorno por unidad de peor pérdida histórica. >0.5 es aceptable, >1 bueno.">ℹ️</span></div>';
+                html += '<div class="metric-value ' + (calmar >= 0.5 ? 'positive' : calmar >= 0.2 ? 'neutral' : 'negative') + '">' + calmar.toFixed(2) + '</div>';
+                html += '<div class="metric-unit">Max DD: ' + (maxDrawdown*100).toFixed(1) + '%</div>';
+                html += '</div>';
+                
+                html += '<div class="metric-card">';
+                html += '<div class="metric-label">Máximo Drawdown<span class="tooltip" title="La mayor caída pico a valle desde un máximo histórico. Mide el riesgo de ruin en el peor caso.">ℹ️</span></div>';
+                html += '<div class="metric-value negative">' + (maxDrawdown * 100).toFixed(2) + '%</div>';
+                html += '<div class="metric-unit">De pico a valle</div>';
+                html += '</div>';
+                
+                html += '<div class="metric-card">';
+                html += '<div class="metric-label">Win Rate<span class="tooltip" title="Porcentaje de períodos con retorno positivo. >50% es necesario pero no suficiente para rentabilidad.">ℹ️</span></div>';
+                html += '<div class="metric-value">' + (winRate * 100).toFixed(1) + '%</div>';
+                html += '<div class="metric-unit">Períodos ganadores</div>';
+                html += '</div>';
+                
+                html += '<div class="metric-card">';
+                html += '<div class="metric-label">Avg Win / Avg Loss<span class="tooltip" title="Ratio del tamaño medio de ganancias vs pérdidas. Necesario para entender si el edge viene de frecuencia o magnitud.">ℹ️</span></div>';
+                html += '<div class="metric-value">' + (avgWin !== 0 && avgLoss !== 0 ? (avgWin/avgLoss).toFixed(2) : 'N/A') + '</div>';
+                html += '<div class="metric-unit">Ganancia : Pérdida</div>';
+                html += '</div>';
+                
+                html += '<div class="metric-card">';
+                html += '<div class="metric-label">Profit Factor<span class="tooltip" title="Beneficio bruto / Pérdida bruta. >1 indica sistema rentable. >1.5 bueno, >2 excelente.">ℹ️</span></div>';
+                html += '<div class="metric-value ' + (profitFactor > 1.5 ? 'positive' : profitFactor > 1 ? 'neutral' : 'negative') + '">' + profitFactor.toFixed(2) + '</div>';
+                html += '<div class="metric-unit">Beneficio : Pérdida</div>';
+                html += '</div>';
+                
+                html += '<div class="metric-card">';
+                html += '<div class="metric-label">Skewness<span class="tooltip" title="Asimetría de la distribución de retornos. Positivo = más ganancias grandes extremes, Negativo = más pérdidas grandes extremes.">ℹ️</span></div>';
+                html += '<div class="metric-value">' + skew.toFixed(3) + '</div>';
+                html += '<div class="metric-unit">Simetría</div>';
+                html += '</div>';
+                
+                html += '<div class="metric-card">';
+                html += '<div class="metric-label">Kurtosis<span class="tooltip" title="Cola de la distribución. Positivo = más eventos extremos que una normal (colas pesadas).">ℹ️</span></div>';
+                html += '<div class="metric-value">' + kurt.toFixed(3) + '</div>';
+                html += '<div class="metric-unit">Forma de cola</div>';
+                html += '</div>';
+                
+                resultsDiv.innerHTML = html;
+            }
             
             // Event Listener
             document.getElementById('calcBtn').addEventListener('click', calculateMetrics);
