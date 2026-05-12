@@ -214,26 +214,7 @@
                 <h2>Datos de entrada</h2>
                 <div class="form-group">
                     <label for="returns">Retornos mensuales (uno por línea)</label>
-                    <textarea id="returns" placeholder="Ejemplo:
-0.02
--0.015
-0.03
-0.01
--0.025
-0.04
--0.005
-0.02
-0.01
--0.01">0.02
--0.015
-0.03
-0.01
--0.025
-0.04
--0.005
-0.02
-0.01
--0.01</textarea>
+                    <textarea id="returns" rows="6"></textarea>
                     <p class="help-text">Ingresa los retornos en formato decimal (0.015 = 1.5%) o porcentaje (1.5%). Un retorno por línea.</p>
                 </div>
                 <div class="form-group">
@@ -264,6 +245,21 @@
     </div>
 
     <script>
+        // Establecer el contenido inicial del textarea después de que el DOM se cargue
+        document.addEventListener('DOMContentLoaded', function() {
+            const returnsTextarea = document.getElementById('returns');
+            returnsTextarea.value = `0.02
+-0.015
+0.03
+0.01
+-0.025
+0.04
+-0.005
+0.02
+0.01
+-0.01`;
+        });
+        
         document.getElementById('calculateBtn').addEventListener('click', calculateMetrics);
         
         // Permitir calcular con Enter en el textarea
